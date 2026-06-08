@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+conda-meta/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.secret
+secrets/
+
+# Editors and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Local model weights and downloaded model assets
+models/
+*.safetensors
+*.bin
+*.ckpt
+*.gguf
+*.onnx
+
+# Training checkpoints and generated experiment artifacts
+outputs/checkpoints/
+outputs/activations/
+outputs/ot/**/*.pt
+outputs/ot/**/*.pth
+outputs/ot/**/*.npz
+outputs/ot/alignment/
+outputs/ot/linear_projector/
+
+# Keep lightweight summaries and figures shareable
+!outputs/
+!outputs/ablations/
+!outputs/ablations/*.csv
+!outputs/ablations/*.md
+!outputs/figures/
+!outputs/figures/*.png
+
+# Package/build artifacts
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/

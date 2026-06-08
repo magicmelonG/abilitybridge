@@ -1,0 +1,95 @@
+experiment:
+  name: toy_qwen_1p5b_to_0p5b
+  seed: 42
+
+models:
+  teacher:
+    name: Qwen/Qwen2.5-Math-1.5B-Instruct
+    path: models/teacher/qwen2p5_math_1p5b_instruct
+  student:
+    name: Qwen/Qwen2.5-0.5B-Instruct
+    path: models/student/qwen2p5_0p5b_instruct
+
+data:
+  dataset_name: openai/gsm8k
+  dataset_config: main
+  train_split: train
+  eval_split: test
+  train_size: 128
+  eval_size: 64
+  seed: 42
+  output_dir: data/gsm8k_toy
+  train_jsonl: data/gsm8k_toy/train.jsonl
+  eval_jsonl: data/gsm8k_toy/eval.jsonl
+
+eval:
+  batch_size: 1
+  max_new_tokens: 256
+  gsm8k_samples: null
+  math500_samples: 100
+  wikitext_samples: 128
+  temperature: 0.0
+  do_sample: false
+  results_dir: outputs/eval
+
+analysis:
+  output_dir: outputs/ablations
+  figure_dir: outputs/figures
+
+activations:
+  output_dir: outputs/activations
+  teacher_layers: [8, 16, 24]
+  student_layers: [4, 12, 20]
+  token_strategy: answer_last
+  max_samples: 128
+  max_length: 768
+
+wfs:
+  gamma: 1.0
+  threshold: 0.0
+  topk: 0.5
+
+intervention:
+  metric: logprob
+  max_samples: 16
+  k_list: null
+  output_csv: outputs/ot/student_zeroout_intervention.csv
+
+ot:
+  output_dir: outputs/ot
+  epsilon: 0.05
+  reg: 0.05
+  max_iter: 200
+  ability_mask_topk: 0.5
+  top_k_dims: 0.5
+  teacher_layer: 8
+  student_layer: 4
+  lambda_ability: 0.25
+  beta_ability: 0.25
+  ridge_alpha: 1.0
+
+train:
+  output_dir: outputs/checkpoints
+  logs_dir: logs
+  train_file: data/processed/math_train.jsonl
+  method: ability_ot
+  beta: 1.0
+  learning_rate: 0.00002
+  num_epochs: 1
+  num_train_epochs: 1
+  batch_size: 1
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  max_seq_len: 768
+  max_seq_length: 768
+  target_layers:
+    - teacher: 8
+      student: 4
+  lora:
+    r: 8
+    alpha: 16
+    dropout: 0.05
+    target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+
+paths:
+  logs_dir: logs
