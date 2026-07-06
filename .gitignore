@@ -52,6 +52,7 @@ outputs/ot/**/*.pth
 outputs/ot/**/*.npz
 outputs/ot/alignment/
 outputs/ot/linear_projector/
+outputs/abilitybridge_v4_feature_rotation_pruning*/
 
 # Keep lightweight summaries and figures shareable
 !outputs/

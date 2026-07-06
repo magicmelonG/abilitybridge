@@ -1,0 +1,77 @@
+experiment:
+  name: abilitybridge_v4_feature_rotation_pruning
+  seed: 42
+
+paths:
+  v3_root: outputs/abilitybridge_v3_sparse_feature_mvp
+  formal_root: outputs/abilitybridge_v2_ability_validation
+  v2_protocol_root: outputs/abilitybridge_v2_layer4_protocol_v2
+  model_path: outputs/abilitybridge_v2_layer_boundary/server_A/shared/pruned_checkpoints/drop_layer_16/model
+  output_root: outputs/abilitybridge_v4_feature_rotation_pruning
+
+runtime:
+  python: /root/restored_envs/abilitybridge_new/bin/python
+  max_seq_length: 768
+  max_new_tokens: 256
+  dtype: auto
+  device_map: auto
+  load_in_4bit: false
+
+grid:
+  layer: [4]
+  site: [mlp]
+  sae_kind: [gated, gap_gated]
+  rotation:
+    - omcr
+    - aagr
+    - subspace
+    - ot_displacement
+  dim: [4, 8, 16]
+  k: [64, 128]
+  ablation: [zero, mean]
+  seed: [42]
+
+stage2_extra:
+  enabled: false
+  site: [mlp, resid]
+  dim: [2, 4, 8, 16, 32]
+  sparsity: [0.0, 0.0001, 0.001, 0.01]
+  ppl_penalty: [0.1, 0.3, 1.0]
+
+rotation:
+  ridge: 0.001
+  beta_easy: 0.5
+  lambda_control: 0.3
+  lambda_lm: 0.3
+  aagr_steps: 800
+  aagr_lr: 0.03
+  aagr_l1: 0.0001
+  aagr_orthogonal: 0.05
+  batch_size: 512
+
+causal:
+  math_samples: 500
+  wikitext_samples: 256
+  bootstrap_samples: 4000
+  ppl_tolerance: 0.02
+  random_repeats: 10
+  random_seed: 9001
+
+map:
+  top_groups: 256
+  bottom_groups: 256
+  random_groups: 256
+  ratios: [0.01, 0.03, 0.05]
+  methods:
+    - rotation_map
+    - random
+    - decoder_low
+    - decoder_high
+
+smoke:
+  max_samples: 2
+  wikitext_samples: 2
+  dim: 4
+  k: 8
+  rotation: omcr
+  sae_kind: gated
