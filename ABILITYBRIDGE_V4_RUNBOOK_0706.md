@@ -2,6 +2,37 @@
 
 目标：在两张 H200 上手动跑 AbilityBridge-v4 feature rotation 长实验。Codex 不在本地启动正式实验；本文件给同伴照着运行。
 
+## 新机器最快启动
+
+同伴机器只需要从 GitHub 下载 `workspace` 代码仓库；不要把 conda 环境、模型权重、大缓存、正式输出结果提交进 Git。
+
+```bash
+git clone https://github.com/magicmelonG/abilitybridge.git
+cd abilitybridge
+```
+
+创建环境。推荐先用项目自带脚本；它会创建 conda 环境、安装 `requirements.txt`、做 CUDA/Python/import 检查。
+
+```bash
+ENV_NAME=abilitybridge \
+PYTHON_VERSION=3.10 \
+CUDA_INDEX_URL=https://download.pytorch.org/whl/cu126 \
+bash setup_server_b_env.sh
+```
+
+如果同伴机器已经有可用环境，也可以手动安装：
+
+```bash
+conda create -n abilitybridge python=3.10 -y
+conda activate abilitybridge
+python -m pip install --upgrade pip
+python -m pip install torch --index-url https://download.pytorch.org/whl/cu126
+python -m pip install -r requirements.txt
+export PYTHON_BIN="$(which python)"
+```
+
+如果 `setup_server_b_env.sh` 因为还没同步模型/缓存而在最后路径检查失败，先不用管环境安装部分；同步下面列出的模型和 cache 后重跑检查即可。
+
 ## 机器前置条件
 
 在同伴机器上需要有：
@@ -20,6 +51,27 @@
 
 这些缓存很大，不建议进 Git。用 `rsync` 或共享磁盘同步。
 
+示例同步方式，假设源机器能 SSH 访问，且源目录是 `/opt/data/private/0630/abilitybridge/workspace`：
+
+```bash
+SRC=user@source-host:/opt/data/private/0630/abilitybridge/workspace
+DEST=/opt/data/private/abilitybridge/workspace
+
+mkdir -p "$DEST"
+rsync -avP "$SRC/outputs/abilitybridge_v2_layer_boundary/server_A/shared/pruned_checkpoints/drop_layer_16/model" \
+  "$DEST/outputs/abilitybridge_v2_layer_boundary/server_A/shared/pruned_checkpoints/drop_layer_16/"
+rsync -avP "$SRC/outputs/abilitybridge_v2_ability_validation/shared/" \
+  "$DEST/outputs/abilitybridge_v2_ability_validation/shared/"
+rsync -avP "$SRC/outputs/abilitybridge_v2_layer4_protocol_v2/baseline/layer16/" \
+  "$DEST/outputs/abilitybridge_v2_layer4_protocol_v2/baseline/layer16/"
+rsync -avP "$SRC/outputs/abilitybridge_v3_sparse_feature_mvp/protocol/" \
+  "$DEST/outputs/abilitybridge_v3_sparse_feature_mvp/protocol/"
+rsync -avP "$SRC/outputs/abilitybridge_v3_sparse_feature_mvp/sae/mlp/" \
+  "$DEST/outputs/abilitybridge_v3_sparse_feature_mvp/sae/mlp/"
+```
+
+如果不能从源机器同步，就需要用同样路径放好这些文件；路径不一致时，优先改 `configs/abilitybridge_v4_rotation_grid.yaml` 里的输入路径。
+
 ## 推荐目录
 
 ```bash
@@ -37,7 +89,8 @@ cd "$WORKSPACE_ROOT"
 ## 环境检查
 
 ```bash
-export PYTHON_BIN=/root/restored_envs/abilitybridge_new/bin/python
+conda activate abilitybridge
+export PYTHON_BIN="$(which python)"
 $PYTHON_BIN -m py_compile src/analysis/abilitybridge_v4_feature_rotation.py
 $PYTHON_BIN -m src.analysis.abilitybridge_v4_feature_rotation list-grid \
   --config configs/abilitybridge_v4_rotation_grid.yaml \
@@ -95,7 +148,8 @@ cat "$ROOT/summary/v4_feature_rotation_report.md"
 ```bash
 tmux new -s abilitybridge_v4
 cd /opt/data/private/abilitybridge/workspace
-export PYTHON_BIN=/root/restored_envs/abilitybridge_new/bin/python
+conda activate abilitybridge
+export PYTHON_BIN="$(which python)"
 
 bash scripts/run_v4_feature_rotation_grid_2gpu.sh \
   --root-dir outputs/abilitybridge_v4_feature_rotation_pruning \
@@ -114,7 +168,8 @@ GPU0：
 ```bash
 tmux new -s abilitybridge_v4_gpu0
 cd /opt/data/private/abilitybridge/workspace
-export PYTHON_BIN=/root/restored_envs/abilitybridge_new/bin/python
+conda activate abilitybridge
+export PYTHON_BIN="$(which python)"
 CUDA_VISIBLE_DEVICES=0 bash scripts/run_v4_feature_rotation_worker.sh \
   --worker gpu0 \
   --gpu 0 \
@@ -127,7 +182,8 @@ GPU1：
 ```bash
 tmux new -s abilitybridge_v4_gpu1
 cd /opt/data/private/abilitybridge/workspace
-export PYTHON_BIN=/root/restored_envs/abilitybridge_new/bin/python
+conda activate abilitybridge
+export PYTHON_BIN="$(which python)"
 CUDA_VISIBLE_DEVICES=1 bash scripts/run_v4_feature_rotation_worker.sh \
   --worker gpu1 \
   --gpu 1 \
