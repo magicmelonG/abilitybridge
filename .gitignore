@@ -37,7 +37,7 @@ logs/
 *.log
 
 # Local model weights and downloaded model assets
-models/
+/models/
 *.safetensors
 *.bin
 *.ckpt
